@@ -29,9 +29,14 @@ except ImportError:
 
 try:
     from autogpt.memory.milvus import MilvusMemory
+    from autogpt.memory.zilliz import ZillizMemory
+
+    supported_memory.append("milvus")
+    supported_memory.append("zilliz")
 except ImportError:
     # print("pymilvus not installed. Skipping import.")
     MilvusMemory = None
+    ZillizMemory = None
 
 
 def get_memory(cfg, init=False):
@@ -61,11 +66,13 @@ def get_memory(cfg, init=False):
         else:
             memory = WeaviateMemory(cfg)
     elif cfg.memory_backend == "milvus":
-        if not MilvusMemory:
+        if not MilvusMemory or not ZillizMemory:
             print(
-                "Error: Milvus sdk is not installed."
-                "Please install pymilvus to use Milvus as memory backend."
+                "Error: pymilvus sdk is not installed."
+                "Please install pymilvus to use Milvus or Zilliz Cloud as memory backend."
             )
+        elif cfg.zilliz_uri != "":
+            memory = ZillizMemory(cfg)
         else:
             memory = MilvusMemory(cfg)
     elif cfg.memory_backend == "no_memory":
@@ -89,5 +96,6 @@ __all__ = [
     "PineconeMemory",
     "NoMemory",
     "MilvusMemory",
-    "WeaviateMemory"
+    "WeaviateMemory",
+    "ZillizMemory"
 ]

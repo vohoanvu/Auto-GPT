@@ -20,7 +20,19 @@ class MilvusMemory(MemoryProviderSingleton):
             cfg (Config): Auto-GPT global config.
         """
         # connect to milvus server.
-        connections.connect(address=cfg.milvus_addr)
+        connections.connect(address=cfg.milvus_addr,user=cfg.milvus_username,password=cfg.milvus_password)
+        self.collection_name = cfg.milvus_collection
+        self.index_params = {
+            "metric_type": "IP",
+            "index_type": "HNSW",
+            "params": {"M": 8, "efConstruction": 64},
+        }
+
+        # init collection.
+        self.init_collection()
+    
+    def init_collection(self) -> None:
+        """Initialize collection in vector database."""
         fields = [
             FieldSchema(name="pk", dtype=DataType.INT64, is_primary=True, auto_id=True),
             FieldSchema(name="embeddings", dtype=DataType.FLOAT_VECTOR, dim=1536),
@@ -28,19 +40,14 @@ class MilvusMemory(MemoryProviderSingleton):
         ]
 
         # create collection if not exist and load it.
-        self.milvus_collection = cfg.milvus_collection
         self.schema = CollectionSchema(fields, "auto-gpt memory storage")
-        self.collection = Collection(self.milvus_collection, self.schema)
+        self.collection = Collection(self.collection_name, self.schema)
         # create index if not exist.
         if not self.collection.has_index():
             self.collection.release()
             self.collection.create_index(
                 "embeddings",
-                {
-                    "metric_type": "IP",
-                    "index_type": "HNSW",
-                    "params": {"M": 8, "efConstruction": 64},
-                },
+                self.index_params,
                 index_name="embeddings",
             )
         self.collection.load()
@@ -76,14 +83,10 @@ class MilvusMemory(MemoryProviderSingleton):
             str: log.
         """
         self.collection.drop()
-        self.collection = Collection(self.milvus_collection, self.schema)
+        self.collection = Collection(self.collection_name, self.schema)
         self.collection.create_index(
             "embeddings",
-            {
-                "metric_type": "IP",
-                "index_type": "HNSW",
-                "params": {"M": 8, "efConstruction": 64},
-            },
+            self.index_params,
             index_name="embeddings",
         )
         self.collection.load()

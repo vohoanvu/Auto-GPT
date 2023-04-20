@@ -79,6 +79,9 @@ class Config(metaclass=Singleton):
         # milvus configuration, e.g., localhost:19530.
         self.milvus_addr = os.getenv("MILVUS_ADDR", "localhost:19530")
         self.milvus_collection = os.getenv("MILVUS_COLLECTION", "autogpt")
+        self.zilliz_uri = os.getenv("ZILLIZ_URI", "")
+        self.milvus_username = os.getenv("MILVUS_USERNAME", "")
+        self.milvus_password = os.getenv("MILVUS_PASSWORD", "")
 
         self.image_provider = os.getenv("IMAGE_PROVIDER")
         self.huggingface_api_token = os.getenv("HUGGINGFACE_API_TOKEN")
