@@ -1,13 +1,17 @@
 """ Milvus memory storage provider."""
+import re
+
 from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections
 
-from autogpt.memory.base import MemoryProviderSingleton, get_ada_embedding
+from autogpt.config import Config
+from autogpt.llm import get_ada_embedding
+from autogpt.memory.base import MemoryProviderSingleton
 
 
 class MilvusMemory(MemoryProviderSingleton):
     """Milvus memory storage provider."""
 
-    def __init__(self, cfg) -> None:
+    def __init__(self, cfg: Config) -> None:
         """Construct a milvus memory storage connection.
 
         Args:
